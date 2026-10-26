@@ -141,3 +141,34 @@
   .notice p { margin: 4px 0; color: var(--ink-2); }
   .notice code { background: var(--board); padding: 1px 5px; border-radius: 4px; }
   body.loading .card .val, body.loading .card .pv { color: transparent; background: var(--track); border-radius: 4px; }
+
+  /* ---------- Kirim ke WhatsApp ---------- */
+  .foot-actions { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .wa-btn { display: inline-flex; align-items: center; gap: 6px; }
+  .wa-btn[hidden] { display: none; }
+  .board-foot .wa-btn { border-color: #25d366; color: #128c7e; background: var(--card); font-weight: 500; }
+  .board-foot .wa-btn:hover { background: #25d366; color: #fff; }
+  .share { width: min(96vw, 1100px); max-height: 92vh; border: 0; border-radius: 14px; padding: 0; background: var(--card); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  .share::backdrop { background: rgba(0,0,0,.45); }
+  .share-head { display: flex; justify-content: space-between; align-items: center; margin: 0; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+  .share-head h2 { margin: 0; font-size: 16px; }
+  .share-close { border: 0; background: transparent; font-size: 22px; line-height: 1; color: var(--ink-2); padding: 2px 6px; }
+  .share-body { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr); gap: 16px; padding: 16px 18px 18px; overflow: auto; max-height: calc(92vh - 50px); }
+  .share-preview { background: var(--board); border: 1px solid var(--line); border-radius: 10px; min-height: 220px; display: grid; place-items: center; overflow: auto; max-height: 70vh; }
+  .share-preview img { max-width: 100%; height: auto; display: block; }
+  .share-preview img[hidden] { display: none; }
+  .share-wait { color: var(--ink-2); padding: 20px; }
+  .share-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .share-side label { font-size: 12px; color: var(--ink-2); }
+  .share-side textarea { width: 100%; resize: vertical; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); color: var(--ink); line-height: 1.45; }
+  .share-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .share-actions button { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 7px 12px; font-size: 13px; }
+  .share-actions button:disabled { opacity: .5; cursor: not-allowed; }
+  .share-actions .wa-btn { border-color: #25d366; color: #128c7e; font-weight: 500; }
+  .share-actions .wa-btn.primary { background: #25d366; color: #fff; border-color: #25d366; }
+  .share-actions .wa-btn:hover:not(:disabled) { background: #1ebe5d; color: #fff; }
+  .share-hint { margin: 2px 0 0; font-size: 12px; color: var(--ink-2); }
+  .share-status { margin: 0; font-size: 12px; min-height: 1.4em; color: var(--accent); }
+  @media (max-width: 720px) { .share-body { grid-template-columns: 1fr; } .share-preview { max-height: 40vh; } }
+  /* saat screenshot: tabel tidak dipotong oleh scroll */
+  body.capturing .tbl .scroll { overflow: visible; }

@@ -215,6 +215,119 @@
   function card(label, value) { return '<div class="card"><div class="lbl">' + label + '</div><div class="val">' + value + '</div></div>'; }
   function pcard(label, p) { return '<div class="card pct"><div class="lbl">' + label + '</div><div class="pv ' + cls(p) + '">' + fmtPct(p, 1) + '</div>' + barHtml(p) + '</div>'; }
 
+  // ---------- Kirim ke WhatsApp: screenshot satu halaman + teks laporan ----------
+  // Screenshot dibuat di browser dengan html2canvas (dimuat dari CDN hanya saat tombol ditekan).
+  var H2C_URL = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  var MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  // Teks pesan per halaman; {tanggal} diganti tanggal laporan. Bisa diubah di dialog sebelum dikirim.
+  // "UP3 MASOHI" -> "UP3 Masohi" untuk teks pesan.
+  var UNIT_NAME = CONFIG.up3Name.replace(/\b\w+/g, function (w) { return w === 'UP3' ? w : w.charAt(0) + w.slice(1).toLowerCase(); });
+  var WA_TEXT = {
+    up3: 'Semangat Pagi\nYth. Bapak GM UIW MMU\nYth. Bapak dan Ibu SRM\nBerikut kami laporkan kinerja harian Distribusi, ' + UNIT_NAME + ' tgl {tanggal}.\uD83D\uDE4F',
+    ulp: 'Berikut kami laporkan kinerja harian Distribusi, ' + UNIT_NAME + ' dan Unit Layanan tgl {tanggal}.\nDemikian terimakasih'
+  };
+  function fmtDateFull(iso) { var p = iso.split('-'); return (+p[2]) + ' ' + MONTHS_FULL[+p[1] - 1] + ' ' + p[0]; }
+  function reportDate() { // tanggal laporan: hari yang dipilih, atau hari terakhir terisi di dalam rentang
+    var f = filt();
+    if (f.d1 === f.d2) return f.d2;
+    return (state.latest && state.latest >= f.d1 && state.latest <= f.d2) ? state.latest : f.d2;
+  }
+  function waMessage() { return WA_TEXT[state.page].replace('{tanggal}', fmtDateFull(reportDate())); }
+  function waFileName() { return 'laporan-kinerja-' + (state.page === 'up3' ? CONFIG.up3Name.toLowerCase().replace(/\s+/g, '-') : 'ulp') + '-' + reportDate() + '.png'; }
+
+  var h2cPromise = null;
+  function loadHtml2canvas() {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    if (!h2cPromise) h2cPromise = new Promise(function (resolve, reject) {
+      var sc = document.createElement('script');
+      sc.src = H2C_URL; sc.async = true;
+      sc.onload = function () { resolve(window.html2canvas); };
+      sc.onerror = function () { h2cPromise = null; reject(new Error('Pustaka screenshot tidak bisa dimuat (periksa koneksi internet)')); };
+      document.head.appendChild(sc);
+    });
+    return h2cPromise;
+  }
+  function capturePage() {
+    closePops();
+    document.body.classList.add('capturing');
+    var target = document.querySelector('.page');
+    return loadHtml2canvas().then(function (h2c) {
+      return h2c(target, {
+        scale: Math.max(2, window.devicePixelRatio || 1), useCORS: true, logging: false,
+        backgroundColor: getComputedStyle(document.body).backgroundColor,
+        ignoreElements: function (el) { return el.matches && el.matches('.pages, .board-foot, .notice, dialog'); }
+      });
+    }).then(function (canvas) {
+      document.body.classList.remove('capturing');
+      return new Promise(function (resolve, reject) {
+        canvas.toBlob(function (b) { b ? resolve(b) : reject(new Error('Gagal membuat gambar')); }, 'image/png');
+      });
+    }, function (err) { document.body.classList.remove('capturing'); throw err; });
+  }
+
+  var share = { blob: null, url: null };
+  var dlg = $('share-dlg');
+  function shareStatus(msg, isErr) { var el = $('share-status'); el.textContent = msg || ''; el.style.color = isErr ? 'var(--bad)' : ''; }
+  function shareFile() { return new File([share.blob], waFileName(), { type: 'image/png' }); }
+  function canNativeShare() {
+    try { return !!(navigator.share && navigator.canShare && share.blob && navigator.canShare({ files: [shareFile()] })); } catch (e) { return false; }
+  }
+  function setShareButtons(ready) {
+    ['share-copy-img', 'share-download'].forEach(function (id) { $(id).disabled = !ready; });
+    var nat = $('share-native'); nat.hidden = !(ready && canNativeShare()); nat.disabled = !ready;
+    $('share-hint').textContent = nat.hidden
+      ? 'Di komputer: tekan "Salin gambar", buka grup WhatsApp, tempel (Ctrl/Cmd+V) di kolom pesan, lalu tempel teks sebagai keterangan. Atau unduh gambar dan kirim sebagai foto.'
+      : 'Tekan "Bagikan gambar + teks", lalu pilih grup WhatsApp tujuan.';
+  }
+  function openShare() {
+    if (!state.data) return;
+    share.blob = null; if (share.url) { URL.revokeObjectURL(share.url); share.url = null; }
+    $('share-text').value = waMessage();
+    $('share-img').hidden = true; $('share-img').removeAttribute('src');
+    $('share-wait').hidden = false; $('share-wait').textContent = 'Membuat screenshot laporan…';
+    shareStatus(''); setShareButtons(false);
+    if (dlg.showModal) { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute('open', '');
+    capturePage().then(function (blob) {
+      share.blob = blob; share.url = URL.createObjectURL(blob);
+      $('share-img').src = share.url; $('share-img').hidden = false; $('share-wait').hidden = true;
+      setShareButtons(true);
+    }).catch(function (err) {
+      $('share-wait').textContent = 'Screenshot gagal: ' + (err && err.message || err);
+      shareStatus('Teks tetap bisa disalin atau dibuka di WhatsApp.', true);
+    });
+  }
+  function copyBlob(blob) {
+    if (!navigator.clipboard || !window.ClipboardItem) return Promise.reject(new Error('Browser tidak mendukung salin gambar; gunakan "Unduh gambar".'));
+    return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+  }
+  $('share-wa').addEventListener('click', openShare);
+  $('share-native').addEventListener('click', function () {
+    if (!share.blob) return;
+    navigator.share({ files: [shareFile()], text: $('share-text').value, title: $('title').textContent })
+      .then(function () { shareStatus('Dibagikan.'); })
+      .catch(function (err) { if (err && err.name !== 'AbortError') shareStatus('Gagal membagikan: ' + err.message, true); });
+  });
+  $('share-copy-img').addEventListener('click', function () {
+    if (!share.blob) return;
+    copyBlob(share.blob).then(function () { shareStatus('Gambar disalin. Tempel di kolom pesan grup WhatsApp (Ctrl/Cmd+V).'); })
+      .catch(function (err) { shareStatus(err.message, true); });
+  });
+  $('share-copy-text').addEventListener('click', function () {
+    var t = $('share-text').value;
+    var p = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(t) : Promise.reject(new Error('Browser tidak mendukung salin otomatis'));
+    p.then(function () { shareStatus('Teks disalin.'); }).catch(function () { $('share-text').select(); shareStatus('Teks dipilih; tekan Ctrl/Cmd+C untuk menyalin.'); });
+  });
+  $('share-download').addEventListener('click', function () {
+    if (!share.url) return;
+    var a = document.createElement('a'); a.href = share.url; a.download = waFileName(); document.body.appendChild(a); a.click(); a.remove();
+    shareStatus('Gambar diunduh: ' + waFileName());
+  });
+  $('share-open').addEventListener('click', function () {
+    window.open('https://wa.me/?text=' + encodeURIComponent($('share-text').value), '_blank', 'noopener');
+    shareStatus('WhatsApp dibuka dengan teks; pilih grup tujuan, lalu tempel atau lampirkan gambarnya.');
+  });
+  dlg.addEventListener('close', function () { if (share.url) { URL.revokeObjectURL(share.url); share.url = null; } share.blob = null; });
+
   load();
   if (CONFIG.autoRefreshMinutes > 0) setInterval(load, CONFIG.autoRefreshMinutes * 60 * 1000);
 })();

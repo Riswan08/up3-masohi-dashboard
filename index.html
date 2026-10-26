@@ -36,7 +36,7 @@
         </div>
       </div>
       <div class="ctl">
-        <button class="ctl-btn" id="date-btn" aria-haspopup="true" aria-expanded="false"><span class="v" id="date-val">—</span></button>
+        <button class="ctl-btn" id="date-btn" aria-haspopup="true" aria-expanded="false"><span><span class="v" id="date-val">—</span></span></button>
         <div class="pop" id="date-pop" hidden>
           <div class="dates"><span>Dari</span><input type="date" id="d1"><span>Sampai</span><input type="date" id="d2"></div>
           <div class="quick" style="border:0;margin:0;padding:0"><button class="chip" type="button" data-preset="latest">Hari terakhir</button><button class="chip" type="button" data-preset="mtd">Bulan berjalan</button><button class="chip" type="button" data-preset="month">Bulan penuh</button></div>
@@ -49,12 +49,42 @@
 
     <div class="board-foot">
       <span id="status">Menghubungi sumber data…</span>
-      <button type="button" id="reload">Muat ulang data</button>
+      <span class="foot-actions">
+        <button type="button" id="reload">Muat ulang data</button>
+        <button type="button" id="share-wa" class="wa-btn" title="Buat screenshot laporan dan teks untuk dikirim ke grup WhatsApp"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 1.8a8.2 8.2 0 1 1-4.2 15.3l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 0 1 12 3.8zm-3.3 4.4c-.2 0-.5 0-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3.1 4.9 4.3 2.4 1 2.9.8 3.4.7.5 0 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3l-2-1c-.3-.1-.5-.1-.7.1l-.9 1.1c-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.4-1.5-.9-.8-1.5-1.8-1.6-2.1-.2-.3 0-.4.1-.6l.4-.5.3-.5c.1-.2 0-.4 0-.5l-.9-2.2c-.2-.5-.4-.5-.6-.5h-.4z"/></svg>Kirim ke WhatsApp</button>
+      </span>
     </div>
   </section>
 
   <section class="tables" id="tables"></section>
 </div>
+
+<!-- Dialog "Kirim ke WhatsApp": screenshot satu halaman + teks laporan -->
+<dialog id="share-dlg" class="share" aria-labelledby="share-title">
+  <form method="dialog" class="share-head">
+    <h2 id="share-title">Kirim ke WhatsApp</h2>
+    <button type="submit" class="share-close" aria-label="Tutup">&times;</button>
+  </form>
+  <div class="share-body">
+    <div class="share-preview">
+      <img id="share-img" alt="Pratinjau screenshot laporan" hidden>
+      <div id="share-wait" class="share-wait">Membuat screenshot laporan…</div>
+    </div>
+    <div class="share-side">
+      <label for="share-text">Teks pesan (bisa diubah)</label>
+      <textarea id="share-text" rows="7" spellcheck="false"></textarea>
+      <div class="share-actions">
+        <button type="button" id="share-native" class="wa-btn primary" hidden>Bagikan gambar + teks…</button>
+        <button type="button" id="share-copy-img">Salin gambar</button>
+        <button type="button" id="share-copy-text">Salin teks</button>
+        <button type="button" id="share-download">Unduh gambar</button>
+        <button type="button" id="share-open" class="wa-btn">Buka WhatsApp dengan teks</button>
+      </div>
+      <p class="share-hint" id="share-hint"></p>
+      <p class="share-status" id="share-status" aria-live="polite"></p>
+    </div>
+  </div>
+</dialog>
 
 <script src="assets/js/config.js"></script>
 <script src="assets/js/data.js"></script>
