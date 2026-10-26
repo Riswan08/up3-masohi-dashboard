@@ -52,7 +52,6 @@
         setStatus('Gagal memuat'); return;
       }
       var notes = [];
-      if (res.fallback.length) notes.push('<h2>' + res.fallback.length + ' KPI dibaca dari tab cadangan</h2><p>' + res.fallback.map(function (f) { return esc(f.label) + ': <code>' + esc(f.tab) + '</code> (tab <code>' + esc(f.instead) + '</code> tidak terbaca)'; }).join('<br>') + '</p>');
       if (res.failed.length) notes.push('<h2>Sebagian KPI gagal dimuat</h2><p>' + res.failed.map(function (f) { return '<code>' + esc(f.tab) + '</code>: ' + esc(f.error); }).join('<br>') + '</p>');
       if (notes.length) showNotice(notes.join(''), res.failed.length > 0);
       applyData(res.data);
