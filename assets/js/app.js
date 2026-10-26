@@ -4,14 +4,8 @@
   var C = window.DashCore, CONFIG = C.CONFIG;
   var $ = function (id) { return document.getElementById(id); };
 
-  var ICONS = {
-    bolt: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#4fb3d9"/><path d="M13 30l7-7 5 5 10-11" fill="none" stroke="#fff" stroke-width="2.5"/><rect x="10" y="33" width="28" height="8" rx="2" fill="#1f3a5f"/><text x="24" y="39.5" font-size="7" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">KWH</text></svg>',
-    meter: '<svg viewBox="0 0 48 48"><rect x="10" y="4" width="28" height="40" rx="4" fill="#9fd2f3" stroke="#1f3a5f" stroke-width="2"/><rect x="14" y="8" width="20" height="12" rx="2" fill="#f2c94c" stroke="#1f3a5f" stroke-width="1.5"/><path d="M24 10l-2 4h3l-2 4" fill="none" stroke="#1f3a5f" stroke-width="1.5"/><g fill="#1f3a5f"><circle cx="17" cy="26" r="1.5"/><circle cx="21" cy="26" r="1.5"/><circle cx="25" cy="26" r="1.5"/><circle cx="29" cy="26" r="1.5"/><circle cx="17" cy="31" r="1.5"/><circle cx="21" cy="31" r="1.5"/><circle cx="25" cy="31" r="1.5"/><circle cx="29" cy="31" r="1.5"/></g><rect x="14" y="36" width="8" height="4" rx="1" fill="#e94b3c"/></svg>',
-    towerP: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#fff" stroke="#222" stroke-width="2"/><path d="M24 8v32M15 14h18M12 20h24M18 40l6-16 6 16" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round"/><text x="33" y="38" font-size="10" font-weight="700" fill="#222" font-family="Arial">P</text></svg>',
-    towerT: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="22" fill="#fff" stroke="#222" stroke-width="2"/><path d="M24 8v32M15 14h18M12 20h24M18 40l6-16 6 16" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round"/><text x="33" y="38" font-size="10" font-weight="700" fill="#222" font-family="Arial">T</text></svg>',
-    people: '<svg viewBox="0 0 48 48"><circle cx="24" cy="22" r="20" fill="#4a90e2"/><path d="M24 2a20 20 0 0 1 20 20H24z" fill="#1f3a5f"/><path d="M24 22l14-14a20 20 0 0 1 6 14z" fill="#9fc5f0"/><circle cx="17" cy="36" r="5" fill="#f7c59f"/><circle cx="30" cy="36" r="5" fill="#f7c59f"/><path d="M9 46a8 8 0 0 1 16 0zM22 46a8 8 0 0 1 16 0z" fill="#e94b3c"/></svg>',
-    plug: '<svg viewBox="0 0 48 48"><path d="M4 22h6M4 26h8M4 30h6" stroke="#1f3a5f" stroke-width="2" stroke-linecap="round"/><rect x="14" y="14" width="26" height="20" rx="4" fill="#5ab7e2" stroke="#1f3a5f" stroke-width="2"/><rect x="40" y="20" width="4" height="8" rx="1" fill="#1f3a5f"/><path d="M28 12l-7 11h6l-3 12 9-13h-6z" fill="#e94b3c" stroke="#1f3a5f" stroke-width="1"/></svg>'
-  };
+  // Ikon KPI: gambar di assets/img/icons/<nama>.png, nama mengikuti properti icon di config.js
+  function iconHtml(key) { return '<img src="assets/img/icons/' + encodeURIComponent(key) + '.png" alt="">'; }
   var SHEET_ICON = '<svg viewBox="0 0 24 24" width="28" height="28"><path d="M6 2h8l5 5v15H6z" fill="#1e8e3e"/><path d="M14 2v5h5" fill="#5fcf80"/><rect x="8" y="10" width="8" height="7" fill="#fff"/><path d="M8 13.5h8M12 10v7" stroke="#1e8e3e" stroke-width="1"/></svg>';
 
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -176,7 +170,7 @@
       if (page === 'up3') {
         kpiHtml +=
           '<div class="krow">' +
-            '<div class="kicon">' + ICONS[k.icon] + '</div>' +
+            '<div class="kicon">' + iconHtml(k.icon) + '</div>' +
             card('TARGET HARIAN', fmtNum(s.period.t, k.decimals)) +
             card('REALISASI HARIAN', fmtNum(s.period.r, k.decimals)) +
             pcard('PENCAPAIAN HARIAN', s.period.pct) +
@@ -195,7 +189,7 @@
       } else {
         kpiHtml +=
           '<div class="kblock">' +
-            '<div class="kicon">' + ICONS[k.icon] + '</div>' +
+            '<div class="kicon">' + iconHtml(k.icon) + '</div>' +
             card('TARGET', fmtNum(s.period.t, k.decimals)) +
             card('REALISASI', fmtNum(s.period.r, k.decimals)) +
             pcard('KOMULATIF', s.period.pct) +

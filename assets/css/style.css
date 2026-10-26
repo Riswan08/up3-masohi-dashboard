@@ -87,7 +87,7 @@
   /* halaman UP3: 7 kartu per baris + label di bawah */
   .krow { display: grid; grid-template-columns: 96px repeat(7, minmax(0, 1fr)); gap: 12px; margin-bottom: 8px; }
   .kicon { width: 96px; height: 96px; border-radius: 6px; background: var(--card); display: grid; place-items: center; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
-  .kicon svg { width: 72px; height: 72px; }
+  .kicon img { width: 72px; height: 72px; object-fit: contain; }
   .klabel { grid-column: 2 / -1; font-weight: 700; font-size: 15px; color: #444; margin: -4px 0 12px; }
   :root[data-theme="dark"] .klabel { color: var(--ink); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .klabel { color: var(--ink); } }
@@ -103,7 +103,7 @@
   }
   @media (max-width: 720px) {
     .krow, .kblock { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .kicon { width: 64px; height: 64px; } .kicon svg { width: 48px; height: 48px; }
+    .kicon { width: 64px; height: 64px; } .kicon img { width: 48px; height: 48px; }
     .krow .kicon, .kblock .kicon { grid-column: 1 / -1; }
     .krow .card.pct, .kblock .card.pct { grid-column: 1 / -1; }
     .klabel { grid-column: 1 / -1; }
