@@ -38,8 +38,9 @@
       <div class="ctl">
         <button class="ctl-btn" id="date-btn" aria-haspopup="true" aria-expanded="false"><span><span class="v" id="date-val">—</span></span></button>
         <div class="pop" id="date-pop" hidden>
-          <div class="dates"><span>Dari</span><input type="date" id="d1"><span>Sampai</span><input type="date" id="d2"></div>
+          <div class="dates"><label for="d1">Dari</label><input type="date" id="d1"><label for="d2">Sampai</label><input type="date" id="d2"></div>
           <div class="quick" style="border:0;margin:0;padding:0"><button class="chip" type="button" data-preset="latest">Hari terakhir</button><button class="chip" type="button" data-preset="mtd">Bulan berjalan</button><button class="chip" type="button" data-preset="month">Bulan penuh</button></div>
+          <div class="date-foot"><span class="date-msg" id="date-msg" aria-live="polite"></span><button type="button" class="chip" id="date-cancel">Batal</button><button type="button" class="apply" id="date-apply">Terapkan</button></div>
         </div>
       </div>
       <a class="sheet-link" id="src-link" href="#" target="_blank" rel="noopener" title="Buka Google Sheet sumber"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M6 2h8l5 5v15H6z" fill="#1e8e3e"/><path d="M14 2v5h5" fill="#5fcf80"/><rect x="8" y="10" width="8" height="7" fill="#fff"/><path d="M8 13.5h8M12 10v7" stroke="#1e8e3e" stroke-width="1"/></svg></a>

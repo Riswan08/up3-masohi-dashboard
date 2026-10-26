@@ -112,7 +112,7 @@
     ['unit-btn', 'date-btn'].forEach(function (id) { $(id).setAttribute('aria-expanded', 'false'); });
   }
   $('unit-btn').addEventListener('click', function (e) { e.stopPropagation(); buildUnitPop(); togglePop('unit-pop', this); });
-  $('date-btn').addEventListener('click', function (e) { e.stopPropagation(); $('d1').value = filt().d1; $('d2').value = filt().d2; togglePop('date-pop', this); });
+  $('date-btn').addEventListener('click', function (e) { e.stopPropagation(); $('d1').value = filt().d1; $('d2').value = filt().d2; dateMsg(''); togglePop('date-pop', this); });
   document.addEventListener('click', function (e) { if (!e.target.closest('.ctl')) closePops(); });
   document.querySelectorAll('[data-quick]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -122,14 +122,24 @@
       buildUnitPop(); render();
     });
   });
+  // Rentang tanggal diterapkan lewat tombol "Terapkan" (atau Enter), bukan saat mengetik,
+  // supaya input tidak berubah sendiri di tengah pengisian.
+  function dateMsg(m) { $('date-msg').textContent = m || ''; }
   function applyDates() {
-    var a = $('d1').value, b = $('d2').value, f = filt();
-    if (!a || !b) return;
+    var a = $('d1').value, b = $('d2').value, f = filt(), bd = state.bounds;
+    if (!a || !b) { dateMsg('Isi tanggal "Dari" dan "Sampai".'); return; }
     if (a > b) { var t = a; a = b; b = t; }
-    f.d1 = a; f.d2 = b; render();
+    if (bd && (b < bd.min || a > bd.max)) { dateMsg('Data tersedia ' + fmtDate(bd.min) + ' s/d ' + fmtDate(bd.max) + '.'); return; }
+    if (bd) { if (a < bd.min) a = bd.min; if (b > bd.max) b = bd.max; }
+    $('d1').value = a; $('d2').value = b; dateMsg('');
+    f.d1 = a; f.d2 = b; render(); closePops();
   }
-  $('d1').addEventListener('change', applyDates);
-  $('d2').addEventListener('change', applyDates);
+  $('date-apply').addEventListener('click', applyDates);
+  $('date-cancel').addEventListener('click', function () { closePops(); });
+  ['d1', 'd2'].forEach(function (id) {
+    $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); applyDates(); } });
+    $(id).addEventListener('input', function () { dateMsg(''); });
+  });
   document.querySelectorAll('[data-preset]').forEach(function (b) {
     b.addEventListener('click', function () {
       var p = b.getAttribute('data-preset'), base = state.latest, f = filt();
@@ -137,11 +147,12 @@
       if (p === 'latest') { f.d1 = f.d2 = base; }
       else if (p === 'mtd') { f.d1 = C.monthStart(base); f.d2 = base; }
       else { f.d1 = C.monthStart(base); f.d2 = lastDayOfMonth(base); }
-      $('d1').value = f.d1; $('d2').value = f.d2; render();
+      $('d1').value = f.d1; $('d2').value = f.d2; dateMsg(''); render(); closePops();
     });
   });
   $('reload').addEventListener('click', load);
-  document.querySelectorAll('[data-page]').forEach(function (b) {
+  // Hanya tombol navigasi; <body> juga punya atribut data-page sehingga selektor harus dibatasi.
+  document.querySelectorAll('.pages button[data-page]').forEach(function (b) {
     b.addEventListener('click', function () { state.page = b.getAttribute('data-page'); closePops(); render(); });
   });
 
@@ -151,7 +162,7 @@
     var page = state.page, f = filt(), sel = selected(), selMap = {};
     sel.forEach(function (u) { selMap[u] = true; });
     document.body.setAttribute('data-page', page);
-    document.querySelectorAll('[data-page]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-page') === page)); });
+    document.querySelectorAll('.pages button[data-page]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-page') === page)); });
     $('title').textContent = page === 'up3' ? 'LAPORAN HARIAN KINERJA ' + CONFIG.up3Name : 'LAPORAN HARIAN KINERJA ULP';
     $('unit-prefix').textContent = page === 'up3' ? 'UP3/ULP: ' : 'ULP: ';
     $('unit-val').textContent = unitControlLabel();

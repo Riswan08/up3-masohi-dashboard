@@ -74,14 +74,27 @@
     });
   }
   function isIso(v) { return typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v); }
-  function detectGrid(grid) {
+  // Judul tanggal pada tab format lebar sering dikirim gviz sebagai angka seri spreadsheet
+  // (hari sejak 1899-12-30, mis. 46320 = 2026-10-25), bukan sebagai tanggal.
+  function isSerial(v) { return typeof v === 'number' && v === Math.floor(v) && v >= 36526 && v <= 73050; }
+  function serialToIso(n) { return new Date(Date.UTC(1899, 11, 30) + n * 86400000).toISOString().slice(0, 10); }
+  function cellDate(v) { return isIso(v) ? v : (isSerial(v) ? serialToIso(v) : null); }
+  // Baris judul format lebar: >= 5 sel tanggal, dan bila berupa angka seri harus berurutan
+  // (menghindari baris angka biasa yang kebetulan masuk rentang seri).
+  function headerRow(grid) {
     for (var i = 0; i < Math.min(15, grid.length); i++) {
-      var dates = 0;
-      for (var j = 0; j < grid[i].length; j++) if (isIso(grid[i][j])) dates++;
-      if (dates >= 5) return 'wide';
+      var dates = 0, run = 0, prev = null;
+      for (var j = 0; j < grid[i].length; j++) {
+        var v = grid[i][j];
+        if (isIso(v)) { dates++; prev = null; continue; }
+        if (isSerial(v)) { run = (prev !== null && v === prev + 1) ? run + 1 : 1; prev = v; if (run >= 5) dates = Math.max(dates, 5); }
+        else prev = null;
+      }
+      if (dates >= 5) return i;
     }
-    return 'long';
+    return -1;
   }
+  function detectGrid(grid) { return headerRow(grid) >= 0 ? 'wide' : 'long'; }
   function numOf(v) { if (v === '' || v === null || v === undefined) return null; if (typeof v === 'number') return isFinite(v) ? v : null; return cellToNum({ v: v }); }
   // Format panjang: TANGGAL | UIW/UP | TARGET | REALISASI | ... (baris judul dilewati otomatis)
   // Kolom F pada tab DB berisi TARGET KOMULATIF bulan berjalan per unit (nilainya sama untuk semua
@@ -99,15 +112,10 @@
   }
   // Format lebar: baris header berisi tanggal; kolom B = unit, kolom C = Target/Realisasi
   function wideGridToRows(grid) {
-    var hdr = -1, i, j;
-    for (i = 0; i < Math.min(15, grid.length) && hdr < 0; i++) {
-      var dates = 0;
-      for (j = 0; j < grid[i].length; j++) if (isIso(grid[i][j])) dates++;
-      if (dates >= 5) hdr = i;
-    }
+    var hdr = headerRow(grid), i, j;
     if (hdr < 0) return [];
     var cols = [];
-    for (j = 0; j < grid[hdr].length; j++) if (isIso(grid[hdr][j])) cols.push({ c: j, d: grid[hdr][j] });
+    for (j = 0; j < grid[hdr].length; j++) { var d = cellDate(grid[hdr][j]); if (d) cols.push({ c: j, d: d }); }
     var byKey = {}, order = [], unit = '';
     for (i = hdr + 1; i < grid.length; i++) {
       var row = grid[i];
@@ -251,18 +259,20 @@
       });
       return Promise.resolve({ data: data, failed: [], fallback: [], total: CONFIG.kpis.length, snapshot: true });
     }
+    // Semua tab kandidat diambil: data harian dari tab pertama yang terisi (urutan config),
+    // target bulanan (kolom F tab DB) dilengkapi dari tab mana pun yang memilikinya.
     var jobs = CONFIG.kpis.map(function (k) {
-      var errors = [];
-      return k.tabs.reduce(function (chain, tab) {
-        return chain.then(function (got) {
-          if (got) return got;
-          return fetchTab(tab).then(function (rows) {
-            if (rows.length) return { key: k.key, rows: rows, tab: tab };
-            errors.push(tab + ': kosong'); return null;
-          }).catch(function (err) { errors.push(tab + ': ' + (err.message || err)); return null; });
-        });
-      }, Promise.resolve(null)).then(function (got) {
-        return got || { key: k.key, error: errors.join('; '), tab: k.tabs.join(' / ') };
+      return Promise.all(k.tabs.map(function (tab) {
+        return fetchTab(tab).then(function (rows) { return { tab: tab, rows: rows, error: rows.length ? null : 'kosong' }; })
+          .catch(function (err) { return { tab: tab, rows: [], error: err.message || String(err) }; });
+      })).then(function (got) {
+        var main = null, i;
+        for (i = 0; i < got.length && !main; i++) if (got[i].rows.length) main = got[i];
+        if (!main) return { key: k.key, error: got.map(function (g) { return g.tab + ': ' + g.error; }).join('; '), tab: k.tabs.join(' / ') };
+        var mt = {};
+        got.forEach(function (g) { g.rows.forEach(function (x) { if (x.mt !== null && x.mt !== undefined) { var key = x.u + '|' + x.d.slice(0, 7); if (!(key in mt)) mt[key] = x.mt; } }); });
+        main.rows.forEach(function (x) { if (x.mt === null || x.mt === undefined) { var m = mt[x.u + '|' + x.d.slice(0, 7)]; x.mt = m === undefined ? null : m; } });
+        return { key: k.key, rows: main.rows, tab: main.tab };
       });
     });
     return Promise.all(jobs).then(function (results) {
@@ -278,7 +288,7 @@
 
   root.DashCore = {
     CONFIG: CONFIG, gvizUrl: gvizUrl, sheetUrl: sheetUrl, parseGviz: parseGviz, tableToRows: tableToRows,
-    gridFromGviz: gridFromGviz, detectGrid: detectGrid, gridToRows: gridToRows, fetchTab: fetchTab, fetchAll: fetchAll,
+    gridFromGviz: gridFromGviz, detectGrid: detectGrid, gridToRows: gridToRows, serialToIso: serialToIso, fetchTab: fetchTab, fetchAll: fetchAll,
     sumRange: sumRange, pct: pct, monthStart: monthStart, monthEnd: monthEnd, monthTarget: monthTarget, unitsOrdered: unitsOrdered,
     latestFilledDate: latestFilledDate, dateBounds: dateBounds, summarize: summarize
   };
