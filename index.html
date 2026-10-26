@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard Kinerja Harian UP3 Masohi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="up3">
+<div class="page">
+
+  <header class="top">
+    <!-- Ganti dengan file logo Anda (mis. logo-kiri.png dan logo-kanan.png di folder yang sama). Jika tidak ada, slot ini kosong. -->
+    <img class="logo" src="assets/img/logo-kiri.png" alt="" onerror="this.classList.add('nologo')">
+    <h1 id="title">LAPORAN HARIAN KINERJA UP3 MASOHI</h1>
+    <img class="logo right" src="assets/img/logo-kanan.png" alt="" onerror="this.classList.add('nologo')">
+  </header>
+
+  <nav class="pages" aria-label="Halaman">
+    <button type="button" data-page="up3" aria-pressed="true">UP3 MASOHI</button>
+    <button type="button" data-page="ulp" aria-pressed="false">ULP</button>
+  </nav>
+
+  <section class="notice error" id="notice" hidden></section>
+
+  <section class="board">
+    <div class="filters">
+      <div class="ctl">
+        <button class="ctl-btn" id="unit-btn" aria-haspopup="true" aria-expanded="false"><span><span class="k" id="unit-prefix">UP3/ULP: </span><span class="v" id="unit-val">—</span></span></button>
+        <div class="pop" id="unit-pop" hidden>
+          <div class="quick"><button class="chip" type="button" data-quick="up3">Hanya UP3</button><button class="chip" type="button" data-quick="ulp">Semua ULP</button><button class="chip" type="button" data-quick="all">Semua</button></div>
+          <div id="unit-list"></div>
+        </div>
+      </div>
+      <div class="ctl">
+        <button class="ctl-btn" id="date-btn" aria-haspopup="true" aria-expanded="false"><span class="v" id="date-val">—</span></button>
+        <div class="pop" id="date-pop" hidden>
+          <div class="dates"><span>Dari</span><input type="date" id="d1"><span>Sampai</span><input type="date" id="d2"></div>
+          <div class="quick" style="border:0;margin:0;padding:0"><button class="chip" type="button" data-preset="latest">Hari terakhir</button><button class="chip" type="button" data-preset="mtd">Bulan berjalan</button><button class="chip" type="button" data-preset="month">Bulan penuh</button></div>
+        </div>
+      </div>
+      <a class="sheet-link" id="src-link" href="#" target="_blank" rel="noopener" title="Buka Google Sheet sumber"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M6 2h8l5 5v15H6z" fill="#1e8e3e"/><path d="M14 2v5h5" fill="#5fcf80"/><rect x="8" y="10" width="8" height="7" fill="#fff"/><path d="M8 13.5h8M12 10v7" stroke="#1e8e3e" stroke-width="1"/></svg></a>
+    </div>
+
+    <div id="kpi"></div>
+
+    <div class="board-foot">
+      <span id="status">Menghubungi sumber data…</span>
+      <button type="button" id="reload">Muat ulang data</button>
+    </div>
+  </section>
+
+  <section class="tables" id="tables"></section>
+</div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+Taruh dua berkas gambar di folder ini:
+  logo-kiri.png   -> logo di kiri judul (mis. Danantara)
+  logo-kanan.png  -> logo di kanan judul (mis. PLN)
+Format PNG/SVG/JPG, tinggi 100-200 px. Jika berkas tidak ada, slotnya dikosongkan otomatis.
