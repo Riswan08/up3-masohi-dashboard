@@ -83,14 +83,17 @@
     return 'long';
   }
   function numOf(v) { if (v === '' || v === null || v === undefined) return null; if (typeof v === 'number') return isFinite(v) ? v : null; return cellToNum({ v: v }); }
-  // Format panjang: TANGGAL | UIW/UP | TARGET | REALISASI (baris judul dilewati otomatis)
+  // Format panjang: TANGGAL | UIW/UP | TARGET | REALISASI | ... (baris judul dilewati otomatis)
+  // Kolom F pada tab DB berisi TARGET KOMULATIF bulan berjalan per unit (nilainya sama untuk semua
+  // tanggal dalam satu bulan). Ini yang dipakai sebagai target komulatif, bukan jumlah target harian.
+  var MONTH_TARGET_COL = 5;
   function longGridToRows(grid) {
     var c = CONFIG.columns, out = [];
     grid.forEach(function (r) {
       var d = isIso(r[c.date]) ? r[c.date] : null, u = r[c.unit] != null ? String(r[c.unit]).trim() : '';
       if (!d || !u) return;
       var real = numOf(r[c.real]);
-      out.push({ d: d, u: u, t: numOf(r[c.target]) || 0, r: real === null ? 0 : real, has: real !== null });
+      out.push({ d: d, u: u, t: numOf(r[c.target]) || 0, r: real === null ? 0 : real, has: real !== null, mt: numOf(r[MONTH_TARGET_COL]) });
     });
     return out;
   }
@@ -159,6 +162,21 @@
   }
 
   function monthStart(isoDate) { return isoDate.slice(0, 8) + '01'; }
+  function monthEnd(isoDate) { var d = new Date(Date.UTC(+isoDate.slice(0, 4), +isoDate.slice(5, 7), 0)); return d.toISOString().slice(0, 10); }
+
+  // Jumlah target bulanan (kolom F tab DB) unit terpilih pada bulan tanggal `ref`.
+  // null bila tidak ada satu pun unit yang punya target bulanan (mis. data dari tab format lebar).
+  function monthTarget(rows, units, ref) {
+    var a = monthStart(ref), b = monthEnd(ref), got = {}, any = false, i, x;
+    for (i = 0; i < rows.length; i++) {
+      x = rows[i];
+      if (x.d < a || x.d > b || !units[x.u] || x.mt === null || x.mt === undefined) continue;
+      if (!(x.u in got)) { got[x.u] = x.mt; any = true; }
+    }
+    if (!any) return null;
+    var t = 0; Object.keys(got).forEach(function (u) { t += got[u]; });
+    return t;
+  }
 
   function unitsOrdered(data) {
     var seen = {}, order = [];
@@ -190,10 +208,15 @@
   }
 
   // Hasil siap render untuk satu KPI
+  // Target periode (dan tabel per unit) = jumlah target harian pada rentang, sama seperti sheet.
+  // Target komulatif = TARGET KOMULATIF bulan `d2` dari kolom F tab DB; bila kolom itu tidak ada
+  // (mis. data dari tab format lebar), jatuh ke jumlah target harian dari awal bulan s/d d2.
   function summarize(kpi, rows, unitSel, d1, d2) {
     var c1 = monthStart(d2);
     var per = sumRange(rows, unitSel, d1, d2);
     var cum = sumRange(rows, unitSel, c1, d2);
+    var mt = monthTarget(rows, unitSel, d2);
+    if (mt !== null) cum.t = mt;
     var perUnit = Object.keys(unitSel).filter(function (u) { return unitSel[u]; }).map(function (u) {
       var one = {}; one[u] = true;
       var s = sumRange(rows, one, d1, d2);
@@ -256,7 +279,7 @@
   root.DashCore = {
     CONFIG: CONFIG, gvizUrl: gvizUrl, sheetUrl: sheetUrl, parseGviz: parseGviz, tableToRows: tableToRows,
     gridFromGviz: gridFromGviz, detectGrid: detectGrid, gridToRows: gridToRows, fetchTab: fetchTab, fetchAll: fetchAll,
-    sumRange: sumRange, pct: pct, monthStart: monthStart, unitsOrdered: unitsOrdered,
+    sumRange: sumRange, pct: pct, monthStart: monthStart, monthEnd: monthEnd, monthTarget: monthTarget, unitsOrdered: unitsOrdered,
     latestFilledDate: latestFilledDate, dateBounds: dateBounds, summarize: summarize
   };
 })(typeof window !== 'undefined' ? window : globalThis);

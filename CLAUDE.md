@@ -7,7 +7,9 @@ kinerja UP3 Masohi dan ULP-nya. Data dibaca langsung oleh browser dari Google Sh
 ## Struktur
 - `index.html` — halaman tunggal, dua tampilan (UP3 MASOHI dan ULP)
 - `assets/js/config.js` — pengaturan: `sheetId`, daftar KPI dan tab kandidatnya, auto-refresh
-- `assets/js/data.js` — baca sheet, kenali format tab (lebar/panjang), agregasi
+- `assets/js/data.js` — baca sheet, kenali format tab (lebar/panjang), agregasi.
+  Target komulatif diambil dari kolom F tab DB (TARGET KOMULATIF bulanan per unit, nilainya sama
+  untuk semua tanggal dalam sebulan); target harian/periode dan tabel per unit = jumlah target harian.
 - `assets/js/app.js` — filter, perpindahan halaman, render, dan fitur "Kirim ke WhatsApp"
   (screenshot satu halaman dengan html2canvas yang dimuat dari CDN hanya saat tombol ditekan;
   teks pesan per halaman ada di konstanta `WA_TEXT`, bisa diedit pengguna di dialog sebelum dikirim)
